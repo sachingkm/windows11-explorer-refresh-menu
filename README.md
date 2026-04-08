@@ -15,7 +15,7 @@ Adds a `Refresh` command to the Windows 11 compact File Explorer context menu fo
 - Windows 11 x64.
 - Visual Studio Build Tools 2022 with the C++ workload.
 - Windows 11 SDK (`10.0.26100.0` validated on this machine).
-- Administrator rights for install/uninstall and certificate trust.
+- Current-user certificate trust and AppX install permissions.
 
 ## Build
 
@@ -33,12 +33,9 @@ Set-ExecutionPolicy -Scope Process Bypass -Force
 .\scripts\Install-RefreshMenu.ps1
 ```
 
-If you are starting from a normal PowerShell window, use the UAC wrapper instead:
+This is a current-user install. It copies external binaries into `%LOCALAPPDATA%\Windows11ExplorerRefreshMenu`, trusts the local development certificate in the current-user stores, and registers the sparse package for the current account.
 
-```powershell
-Set-ExecutionPolicy -Scope Process Bypass -Force
-.\scripts\Install-RefreshMenu-AsAdmin.ps1
-```
+Machine-wide provisioning is intentionally out of scope for this version because the verified provisioning path is not supported on this Windows edition.
 
 ## Uninstall
 
@@ -46,3 +43,12 @@ Set-ExecutionPolicy -Scope Process Bypass -Force
 Set-ExecutionPolicy -Scope Process Bypass -Force
 .\scripts\Uninstall-RefreshMenu.ps1
 ```
+
+## Verify
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass -Force
+.\scripts\Test-RefreshMenuRegistration.ps1 -RestartExplorer
+```
+
+The script reports package state, recent AppX deployment events, and the remaining manual Explorer checks.

@@ -1,34 +1,20 @@
 [CmdletBinding()]
-param()
+param(
+    [switch]$AllUsers
+)
 
 $ErrorActionPreference = 'Stop'
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $config = Import-PowerShellDataFile (Join-Path $repoRoot 'config\PackageConfig.psd1')
-$installRoot = Join-Path ${env:ProgramFiles} $config.InstallDirectoryName
+$installRoot = Join-Path ${env:LOCALAPPDATA} $config.InstallDirectoryName
 
-function Assert-Administrator {
-    $currentIdentity = [Security.Principal.WindowsIdentity]::GetCurrent()
-    $principal = New-Object Security.Principal.WindowsPrincipal($currentIdentity)
-    if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-        throw 'Run Uninstall-RefreshMenu.ps1 from an elevated PowerShell session.'
-    }
+if ($AllUsers) {
+    throw 'All-user uninstall is not supported in the current implementation. Use the default current-user uninstall path.'
 }
 
-Assert-Administrator
-
-Get-AppxPackage -Name $config.PackageName -AllUsers -ErrorAction SilentlyContinue | ForEach-Object {
-    try {
-        Remove-AppxPackage -Package $_.PackageFullName -AllUsers -ErrorAction Stop
-    }
-    catch {
-        Write-Warning $_.Exception.Message
-    }
-}
-
-$provisionedPackage = Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -eq $config.PackageName }
-if ($provisionedPackage) {
-    Remove-AppxProvisionedPackage -Online -PackageName $provisionedPackage.PackageName | Out-Null
+Get-AppxPackage -Name $config.PackageName -ErrorAction SilentlyContinue | ForEach-Object {
+    Remove-AppxPackage -Package $_.PackageFullName -ErrorAction SilentlyContinue
 }
 
 if (Test-Path $installRoot) {
@@ -40,8 +26,8 @@ $friendlyName = $config.DisplayName
 
 @(
     'Cert:\CurrentUser\My',
-    'Cert:\LocalMachine\TrustedPeople',
-    'Cert:\LocalMachine\Root'
+    'Cert:\CurrentUser\TrustedPeople',
+    'Cert:\CurrentUser\Root'
 ) | ForEach-Object {
     Get-ChildItem $_ -ErrorAction SilentlyContinue |
         Where-Object { $_.Subject -eq $subject -and $_.FriendlyName -eq $friendlyName } |

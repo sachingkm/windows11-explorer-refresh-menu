@@ -9,11 +9,5 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$repoRoot = Split-Path -Parent $PSScriptRoot
-$command = @(
-    "Set-ExecutionPolicy -Scope Process Bypass -Force"
-    "Set-Location -LiteralPath '$repoRoot'"
-    ".\scripts\Install-RefreshMenu.ps1 -Configuration $Configuration -Platform $Platform"
-) -join '; '
-
-Start-Process -FilePath 'powershell.exe' -Verb RunAs -ArgumentList '-NoProfile', '-Command', $command -Wait
+Write-Warning 'Administrative install is no longer the primary path. Running the current-user installer instead.'
+& (Join-Path $PSScriptRoot 'Install-RefreshMenu.ps1') -Configuration $Configuration -Platform $Platform

@@ -10,7 +10,9 @@ param(
 
     [string]$PfxPath,
 
-    [SecureString]$PfxPassword
+    [SecureString]$PfxPassword,
+
+    [string]$PfxPasswordFilePath
 )
 
 $ErrorActionPreference = 'Stop'
@@ -19,6 +21,7 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $signTool = 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\signtool.exe'
 $makeAppx = 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\makeappx.exe'
 $vsWhere = 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe'
+$cmdExe = 'C:\Windows\System32\cmd.exe'
 
 $pathValue = [Environment]::GetEnvironmentVariable('Path', 'Process')
 [Environment]::SetEnvironmentVariable('Path', $pathValue, 'Process')
@@ -37,13 +40,13 @@ function Get-BuildTools {
         throw 'Visual Studio Build Tools installation not found.'
     }
 
-    $devCmd = Join-Path $installationPath 'Common7\Tools\VsDevCmd.bat'
-    if (-not (Test-Path $devCmd)) {
-        throw "VsDevCmd.bat not found at $devCmd"
+    $vcVars = Join-Path $installationPath 'VC\Auxiliary\Build\vcvars64.bat'
+    if (-not (Test-Path $vcVars)) {
+        throw "vcvars64.bat not found at $vcVars"
     }
 
     return @{
-        DevCmd = $devCmd
+        DevCmd = $vcVars
     }
 }
 
@@ -63,6 +66,14 @@ function Get-PlainTextPassword {
     }
 }
 
+if (-not $PfxPassword -and $PfxPasswordFilePath) {
+    if (-not (Test-Path $PfxPasswordFilePath)) {
+        throw "PFX password file not found: $PfxPasswordFilePath"
+    }
+
+    $PfxPassword = ConvertTo-SecureString -String ((Get-Content $PfxPasswordFilePath -Raw).Trim()) -AsPlainText -Force
+}
+
 function Sign-File {
     param(
         [string]$FilePath,
@@ -72,6 +83,9 @@ function Sign-File {
 
     $plainPassword = Get-PlainTextPassword -SecurePassword $CertificatePassword
     & $signTool sign /fd SHA256 /f $CertificatePath /p $plainPassword $FilePath | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        throw "SignTool failed for $FilePath"
+    }
 }
 
 function Invoke-DevCommand {
@@ -80,8 +94,8 @@ function Invoke-DevCommand {
         [string]$Command
     )
 
-    $fullCommand = "`"$DevCmd`" -no_logo -arch=$Platform && $Command"
-    & cmd.exe /c $fullCommand
+    $fullCommand = "`"$DevCmd`" && $Command"
+    & $cmdExe /c $fullCommand
     if ($LASTEXITCODE -ne 0) {
         throw "Native build command failed: $Command"
     }

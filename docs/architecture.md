@@ -13,12 +13,12 @@
   - Sends `F5` to trigger a refresh.
 - Sparse MSIX package
   - Gives the shell extension package identity.
+  - Registers the COM server through packaged COM metadata.
   - Registers `Directory\Background` and maps the verb to the COM CLSID.
   - Uses `AllowExternalContent` so the DLL and EXE live outside the MSIX.
 
 ## Install model
 
 - Package assets stay inside the sparse package.
-- The DLL and EXE are copied to `C:\Program Files\Windows11ExplorerRefreshMenu`.
-- The sparse package is provisioned for future users and registered for the current user.
-
+- The DLL and EXE are copied to `%LOCALAPPDATA%\Windows11ExplorerRefreshMenu`.
+- The sparse package is registered for the current user.
