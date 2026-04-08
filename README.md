@@ -33,10 +33,16 @@ Set-ExecutionPolicy -Scope Process Bypass -Force
 .\scripts\Install-RefreshMenu.ps1
 ```
 
+If you are starting from a normal PowerShell window, use the UAC wrapper instead:
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass -Force
+.\scripts\Install-RefreshMenu-AsAdmin.ps1
+```
+
 ## Uninstall
 
 ```powershell
 Set-ExecutionPolicy -Scope Process Bypass -Force
 .\scripts\Uninstall-RefreshMenu.ps1
 ```
-
