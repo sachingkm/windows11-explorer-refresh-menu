@@ -1,0 +1,4 @@
+LIBRARY "RefreshExplorerCommand"
+EXPORTS
+    DllCanUnloadNow PRIVATE
+    DllGetClassObject PRIVATE

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Pack" ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)'==''">Release</Configuration>
+    <Platform Condition="'$(Platform)'==''">x64</Platform>
+    <RepoRoot>$(MSBuildThisFileDirectory)..\</RepoRoot>
+    <PackageStageDir>$(RepoRoot)artifacts\$(Configuration)\$(Platform)\package-stage\</PackageStageDir>
+    <PackageOutputDir>$(RepoRoot)artifacts\$(Configuration)\$(Platform)\package\</PackageOutputDir>
+    <ManifestSource>$(RepoRoot)packaging\AppxManifest.xml</ManifestSource>
+    <AssetsSourceDir>$(RepoRoot)packaging\Assets\</AssetsSourceDir>
+    <PackageFile>$(PackageOutputDir)Windows11ExplorerRefreshMenu.msix</PackageFile>
+    <MakeAppxExe>C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\makeappx.exe</MakeAppxExe>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AssetFiles Include="$(AssetsSourceDir)*.png" />
+  </ItemGroup>
+
+  <Target Name="Clean">
+    <RemoveDir Directories="$(PackageStageDir)" />
+  </Target>
+
+  <Target Name="Prepare">
+    <MakeDir Directories="$(PackageStageDir);$(PackageStageDir)Assets;$(PackageOutputDir)" />
+    <Copy SourceFiles="$(ManifestSource)" DestinationFiles="$(PackageStageDir)AppxManifest.xml" />
+    <Copy SourceFiles="@(AssetFiles)" DestinationFolder="$(PackageStageDir)Assets" />
+  </Target>
+
+  <Target Name="Pack" DependsOnTargets="Prepare">
+    <Exec Command="&quot;$(MakeAppxExe)&quot; pack /d &quot;$(PackageStageDir)&quot; /p &quot;$(PackageFile)&quot; /nv /o" />
+  </Target>
+</Project>
+
